@@ -162,14 +162,26 @@ python main.py --mode autonomous \
   --max-steps 15
 ```
 
-### Streamlit Dashboard
+### 🚀 Running the System (Dual Architecture)
 
+Basir uses a high-performance decoupled architecture:
+1. **Background Engine (FastAPI)**: Handles the AI reasoning, browser automation, and high-FPS live MJPEG video stream without blocking.
+2. **Dashboard (Streamlit)**: A lightweight client for real-time monitoring and control.
+
+Open **two** separate terminals:
+
+**Terminal 1 (Start the AI Engine):**
 ```bash
-streamlit run app.py
+python -m uvicorn server:app --reload
 ```
 
-This launches a real-time dashboard featuring:
-- 📡 **Live Browser View** — Watch Basir navigate in real-time
+**Terminal 2 (Start the Dashboard):**
+```bash
+python -m streamlit run app.py
+```
+
+This launches the real-time Streamlit dashboard featuring:
+- 📡 **Live Browser View** — High-FPS smooth video stream via FastAPI
 - 🎮 **Control Room** — Set target URL, goal, and mode
 - 🧠 **Reasoning Log** — See the AI's thought process step by step
 - 📊 **Results Panel** — Test outcomes and screenshots
@@ -210,8 +222,10 @@ class MyCustomTest(BaseTestCommand):
 | **MVP** | Intent-based navigation on live URLs | ✅ Complete |
 | **Phase 2** | Live Dashboard with Agent Narration | ✅ Complete |
 | **Phase 3** | Human-in-the-Loop Interrupts | ✅ Complete |
-| **Phase 4** | Containerized Cloud Run Deployment | ✅ Complete |
-| **Phase 5** | Multi-agent collaboration with Google ADK | ⏳ Planned |
+| **Phase 4** | Advanced Browser Stealth & State Management | ✅ Complete |
+| **Phase 5** | Quota Control & Intelligent Model Routing | ✅ Complete |
+| **Phase 6** | FastAPI Backend Migration & Decoupled Architecture | ✅ Complete |
+| **Phase 7** | Multi-agent collaboration with Google ADK | ⏳ Planned |
 
 ---
 
