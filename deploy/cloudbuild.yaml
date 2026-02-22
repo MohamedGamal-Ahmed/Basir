@@ -1,0 +1,29 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/basir-agent', '-f', 'deploy/Dockerfile', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/basir-agent']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'basir-agent'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/basir-agent'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+      - '--set-secrets=GOOGLE_API_KEY=basir-gemini-key:latest'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '1'
+
+images:
+  - 'gcr.io/$PROJECT_ID/basir-agent'

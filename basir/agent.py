@@ -385,7 +385,7 @@ class Agent:
     ) -> dict:
         """تشغيل وضع الاختبار الذاتي (ReAct Pattern).
 
-        يقبل هدفاً بلغة طبيعية ويستخدم AutonomousCommand
+        يقبل هدفاً بلغة طبيعية ويستخدم IntentCommand
         لتحقيقه ديناميكياً بدون سيناريو مسبق.
 
         في كل دورة، Gemini يقرر الخطوة التالية بناءً على:
@@ -408,7 +408,7 @@ class Agent:
             ...     goal="Log in with username 'tomsmith' and password 'SuperSecretPassword!'"
             ... )
         """
-        from basir.commands.autonomous_command import AutonomousCommand
+        from basir.commands.autonomous_command import IntentCommand
 
         logger.info("=" * 55)
         logger.info(f"🧠 وضع ReAct الذاتي")
@@ -417,6 +417,6 @@ class Agent:
         logger.info(f"📊 الحد الأقصى: {max_steps} خطوة")
         logger.info("=" * 55)
 
-        autonomous_cmd = AutonomousCommand(goal=goal, max_steps=max_steps)
-        return await self.run(target_url=target_url, test_command=autonomous_cmd)
+        intent_cmd = IntentCommand(goal=goal, max_steps=max_steps)
+        return await self.run(target_url=target_url, test_command=intent_cmd)
 

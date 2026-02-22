@@ -131,8 +131,8 @@ async def main() -> None:
         "max_retries": config.get("agent", {}).get("max_retries", 3),
         "browser": config.get("browser", {}),
         "vision": {
-            "flash_model": config.get("models", {}).get("flash"),
-            "pro_model": config.get("models", {}).get("pro"),
+            "flash_model": config.get("models", {}).get("default_model"),
+            "pro_model": config.get("models", {}).get("high_reasoning_model"),
         },
         "reporter": config.get("reporter", {}),
         "api": config.get("api", {}),

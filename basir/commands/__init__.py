@@ -3,11 +3,11 @@
 Provides:
     - BaseTestCommand: Abstract base class for all test commands.
     - LoginTestCommand: Scripted login flow testing (MVP).
-    - AutonomousCommand: ReAct-based autonomous goal testing.
+    - IntentCommand: ReAct-based autonomous goal testing.
 """
 
 from basir.commands.base_command import BaseTestCommand
 from basir.commands.login_test import LoginTestCommand
-from basir.commands.autonomous_command import AutonomousCommand
+from basir.commands.autonomous_command import IntentCommand
 
-__all__ = ["BaseTestCommand", "LoginTestCommand", "AutonomousCommand"]
+__all__ = ["BaseTestCommand", "LoginTestCommand", "IntentCommand"]

@@ -36,7 +36,9 @@ Typical usage example:
 """
 
 import logging
+import asyncio
 from typing import Any, Optional
+from pathlib import Path
 
 from basir.commands.base_command import BaseTestCommand
 
@@ -125,8 +127,8 @@ class ActionMemory:
         self._history.clear()
 
 
-class AutonomousCommand(BaseTestCommand):
-    """أمر اختبار ذاتي مبني على نمط ReAct.
+class IntentCommand(BaseTestCommand):
+    """أمر تنفيذ مهام الويب مبني على نمط ReAct.
 
     يقبل هدفاً بلغة طبيعية ويستخدم Gemini لتحديد
     الخطوات اللازمة ديناميكياً بدون سيناريو مسبق.
@@ -144,27 +146,34 @@ class AutonomousCommand(BaseTestCommand):
     """
 
     DEFAULT_MAX_STEPS = 15
+    LIVE_DIR = Path("reports/live")
 
     # Prompt الرئيسي لنمط ReAct — يوجه Gemini لاتخاذ القرارات
     REACT_SYSTEM_PROMPT = (
-        "You are Basir, an autonomous QA testing agent. "
-        "You are given a GOAL to achieve on a webpage.\n\n"
+        "You are Basir, a web co-pilot that helps users navigate and complete "
+        "real-world tasks on web interfaces. You see the screen, understand the "
+        "user's goal, and act as their hands.\n\n"
         "For each screenshot, you must respond with a JSON object:\n"
         "{\n"
-        '  "thought": "Your reasoning about the current state",\n'
-        '  "action_type": "click|type|scroll|wait|done|obstacle",\n'
+        '  "thought": "Your internal reasoning about the current state",\n'
+        '  "narration": "A user-facing explanation of what you are doing and why (1-2 sentences)",\n'
+        '  "action_type": "click|type|scroll|wait|done|obstacle|ask_user",\n'
         '  "target_element": "Description of element to interact with",\n'
         '  "type_text": "Text to type (only if action_type is type)",\n'
         '  "press_enter": true/false (press Enter key after typing),\n'
         '  "coordinates": {"y": <0-1000>, "x": <0-1000>},\n'
         '  "goal_reached": true/false,\n'
-        '  "obstacle": "Description of any popup/error blocking the goal (or null)"\n'
+        '  "obstacle": "Description of any popup/error blocking the goal (or null)",\n'
+        '  "user_question": "Question for the user (only if action_type is ask_user)"\n'
         "}\n\n"
         "RULES:\n"
+        "- ALWAYS write a narration explaining what you're doing in simple language.\n"
         "- If you see a popup/error/cookie banner, set action_type to 'obstacle' "
         "and describe how to dismiss it.\n"
         "- If the goal is fully achieved, set goal_reached to true and "
         "action_type to 'done'.\n"
+        "- If you need user input to proceed (e.g. choosing between options), "
+        "use action_type 'ask_user' and set user_question.\n"
         "- NEVER repeat the same action on the same element more than twice.\n"
         "- When typing in a SEARCH box, ALWAYS set press_enter to true.\n"
         "- Provide coordinates for click actions.\n"
@@ -184,8 +193,8 @@ class AutonomousCommand(BaseTestCommand):
             max_steps: الحد الأقصى لعدد الخطوات قبل التوقف.
         """
         super().__init__(
-            name="AutonomousTest",
-            description=f"اختبار ذاتي: {goal[:50]}..."
+            name="IntentNavigator",
+            description=f"مهمة ذاتية: {goal[:50]}..."
         )
         self.goal = goal
         self.max_steps = max_steps
@@ -249,18 +258,51 @@ class AutonomousCommand(BaseTestCommand):
             })
 
         try:
+            # Check for user interrupts from Dashboard
+            self.LIVE_DIR.mkdir(parents=True, exist_ok=True)
+            interrupt_file = self.LIVE_DIR / "interrupt.txt"
+            interrupt_msg = ""
+            if interrupt_file.exists():
+                interrupt_msg = interrupt_file.read_text(encoding="utf-8").strip()
+                logger.warning(f"🛑 User Interrupt Received: {interrupt_msg}")
+                # Clear the file so we don't read it twice
+                interrupt_file.unlink(missing_ok=True)
+
             # 1. OBSERVE: التقاط الشاشة
             screenshot = await agent.browser.take_screenshot()
+
+            # 1.5. OBSERVE STRUCTURE (Dual Perception)
+            print("🌳 Getting ARIA snapshot...")
+            aria_tree = await agent.browser.get_aria_snapshot()
+            self._aria_context = aria_tree if aria_tree and aria_tree != "(ARIA snapshot unavailable)" else ""
+            
+            # Add interrupt message to context if present
+            if interrupt_msg:
+                self._aria_context = f"[USER INTERRUPT INSTRUCTION]: {interrupt_msg}\n\n" + self._aria_context
 
             # 2. THINK: سؤال Gemini عن القرار التالي
             decision = await self._think(agent, screenshot)
 
             thought = decision.get("thought", "")
             action_type = decision.get("action_type", "unknown")
+            
+            # Quota Management: Track failures for Model Routing
+            if action_type == "unknown":
+                self.consecutive_fails = getattr(self, 'consecutive_fails', 0) + 1
+            else:
+                self.consecutive_fails = 0
+                
             result["thought"] = thought
 
-            logger.info(f"💭 التفكير: {thought[:80]}...")
-            logger.info(f"⚡ القرار: {action_type}")
+            logger.info(f"💬 Narration: {thought[:80]}...")
+            logger.info(f"⚡ Decision: {action_type}")
+
+            # Emit narration for the dashboard
+            narration = decision.get("narration", thought)
+            if narration:
+                print(f"\n🗣️ [Basir] {narration}")
+                narration_file = self.LIVE_DIR / "narration.txt"
+                narration_file.write_text(narration, encoding="utf-8")
 
             # 3. ACT: تنفيذ القرار
             if decision.get("goal_reached"):
@@ -290,10 +332,19 @@ class AutonomousCommand(BaseTestCommand):
                 result["success"] = True
                 result["details"] = "انتظار استقرار الصفحة."
 
+            elif action_type == "ask_user":
+                user_q = decision.get("user_question", "What would you like me to do?")
+                print(f"\n❓ [Basir asks] {user_q}")
+                result["action"] = f"ask_user: {user_q[:50]}"
+                result["success"] = True
+                result["details"] = f"❓ Agent needs input: {user_q}"
+                result["user_question"] = user_q
+                # Don't mark complete — wait for user response on next cycle
+
             elif action_type == "done":
                 result["action"] = "done"
                 result["success"] = True
-                result["details"] = f"✅ الوكيل قرر الانتهاء: {thought}"
+                result["details"] = f"✅ Task completed: {thought}"
                 self._mark_complete()
 
             else:
@@ -316,6 +367,8 @@ class AutonomousCommand(BaseTestCommand):
                 "target": str(e)[:50],
                 "result": "failed",
             })
+            # Prevent rapid quota burning by sleeping briefly on error
+            await asyncio.sleep(2.5)
 
         return result
 
@@ -343,22 +396,59 @@ class AutonomousCommand(BaseTestCommand):
             f"Analyze the screenshot and decide the next action."
         )
 
-        # إضافة ARIA context إذا متاح (مع تقليل الحجم لـ 4000 حرف)
+        # Token Slimming: Ensure we prioritize viewport-only and truncate to max 1000 characters
         aria_ctx = getattr(self, '_aria_context', '')
         if aria_ctx:
             # Filter to viewport-only elements (exclude [offscreen])
             lines = aria_ctx.split('\n')
             viewport_lines = [l for l in lines if '[offscreen]' not in l]
-            trimmed = '\n'.join(viewport_lines)[:1500]
+            trimmed = '\n'.join(viewport_lines)[:1000]
             full_prompt += f"\n\n--- Page Structure (ARIA, viewport only) ---\n{trimmed}"
             print(f"   📎 ARIA context added ({len(trimmed)} chars, viewport only)")
 
-        # استخدام agent.vision (Gemini) للتحليل
-        print(f"\n🧠 [Think] Sending to Gemini for decision...")
-        analysis = await agent.vision.analyze_screenshot(
-            screenshot=screenshot,
-            context=full_prompt
-        )
+        # Exponential Backoff and Smart Routing for 429 RESOURCE_EXHAUSTED errors
+        max_retries = 4
+        base_delay = 2
+        
+        # 1. The Mastermind (Pro) Fallback: Check if Flash failed twice
+        current_model = "flash"
+        consecutive_fails = getattr(self, 'consecutive_fails', 0)
+        if consecutive_fails >= 2:
+            current_model = "pro"
+            logger.info("🔄 Switching to Gemini Pro for complex reasoning...")
+            print("\n🔄 Switching to Gemini Pro for complex reasoning...")
+            self.consecutive_fails = 0  # Reset after switching
+            
+        for attempt in range(max_retries):
+            try:
+                print(f"\n🧠 [Think] Sending to Gemini ({current_model}) for decision... (Attempt {attempt + 1})")
+                analysis = await agent.vision.analyze_screenshot(
+                    screenshot=screenshot,
+                    context=full_prompt,
+                    model_type=current_model
+                )
+                break
+            except Exception as e:
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                    logger.warning(f"⚠️ 429 Quota Exceeded on {current_model}: {error_str[:100]}...")
+                    
+                    # 2. The Mastermind (Pro) Fallback: Switch to Pro if Flash hits 429
+                    if current_model == "flash":
+                        current_model = "pro"
+                        logger.info("🔄 Switching to Gemini Pro for complex reasoning (due to 429 on Flash)...")
+                        print("\n🔄 Switching to Gemini Pro for complex reasoning (due to 429 on Flash)...")
+                        continue  # Retry immediately with Pro
+                        
+                    if attempt < max_retries - 1:
+                        delay = base_delay * (2 ** attempt)  # 2, 4, 8 seconds
+                        print(f"⏳ Rate Limit hit on {current_model}. Exponential backoff: waiting {delay}s...")
+                        await asyncio.sleep(delay)
+                    else:
+                        print(f"❌ Max retries reached for 429 Quota Exceeded on {current_model}.")
+                        raise e
+                else:
+                    raise e
 
         raw_text = analysis.get("raw_response", "").strip()
         logger.debug(f"🧠 AI raw response: {raw_text[:200]}")

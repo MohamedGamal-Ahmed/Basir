@@ -1,5 +1,5 @@
-# Basir QA Agent - Docker Image
-# ================================
+# Basir Web Co-Pilot - Cloud Run Docker Image
+# ==========================================
 FROM python:3.11-slim
 
 # Install system dependencies for Playwright
@@ -23,5 +23,7 @@ COPY . .
 # Expose port for Cloud Run
 EXPOSE 8080
 
-# Start the agent
-CMD ["python", "main.py"]
+# Use a startup script or run Uvicorn directly
+# We will run the FastAPI server on $PORT
+ENV PORT=8080
+CMD uvicorn server:app --host 0.0.0.0 --port ${PORT}

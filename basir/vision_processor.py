@@ -1,8 +1,8 @@
-"""Vision Processor module - Gemini 3.1 multimodal vision analysis.
+"""Vision Processor module - Gemini 2.5 multimodal vision analysis.
 
 This module provides the VisionProcessor class for analyzing screenshots
-using Gemini 3.1 Flash (real-time/streaming) and Gemini 3.1 Pro
-(deep reasoning and bug report synthesis).
+using Gemini 2.5 Flash (real-time navigation) and Gemini 2.5 Pro
+(deep reasoning, recovery analysis, and page explanation).
 
 Authentication Flow:
     ┌─────────────────────────────────────────────────────────┐
@@ -137,16 +137,17 @@ class VisionProcessor:
         _api_key: مفتاح API.
     """
 
-    DEFAULT_FLASH_MODEL = "gemini-2.0-flash"
-    DEFAULT_PRO_MODEL = "gemini-2.0-flash"
+    DEFAULT_FLASH_MODEL = "gemini-1.5-flash"
+    DEFAULT_PRO_MODEL = "gemini-1.5-pro"
 
     # الـ System Prompt الرئيسي لتوجيه Gemini أثناء التحليل
     VISION_SYSTEM_PROMPT = (
-        "You are a visual QA testing agent. When receiving a webpage screenshot:\n"
+        "You are Basir, a web co-pilot that helps users navigate web interfaces. "
+        "When receiving a webpage screenshot:\n"
         "1. Identify ALL visible interactive elements (buttons, input fields, links).\n"
         "2. Provide coordinates of each element as (x, y) in range 0-1000.\n"
-        "3. Suggest the next action based on the given context.\n"
-        "4. Report any visual issues or obvious bugs.\n"
+        "3. Suggest the next action based on the user's goal and context.\n"
+        "4. Report any obstacles (popups, errors, cookie banners) blocking progress.\n"
         "Respond in JSON format ONLY with keys: "
         "'elements', 'suggested_action', 'issues'."
     )
@@ -287,7 +288,7 @@ class VisionProcessor:
         return optimized
 
     async def analyze_screenshot(
-        self, screenshot: bytes, context: str = ""
+        self, screenshot: bytes, context: str = "", model_type: str = "flash"
     ) -> dict:
         """تحليل لقطة شاشة واحدة باستخدام Gemini Flash.
 
@@ -314,15 +315,10 @@ class VisionProcessor:
 
         from google.genai import types
         
-        # إعداد الـ GenerateContentConfig مع ThinkingConfig
-        config = types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(
-                thinking_level="HIGH",
-            )
-        )
-
+        selected_model = self.pro_model if model_type == "pro" else self.flash_model
+        
         response = await client.aio.models.generate_content(
-            model=self.flash_model,
+            model=selected_model,
             contents=[
                 types.Content(
                     role="user",
@@ -331,8 +327,7 @@ class VisionProcessor:
                         types.Part.from_text(text=prompt)
                     ]
                 )
-            ],
-            config=config
+            ]
         )
 
         logger.info("📸 تم تحليل لقطة الشاشة عبر Gemini (Thinking Enabled).")
@@ -387,13 +382,6 @@ class VisionProcessor:
 
         from google.genai import types
         
-        # إعداد الـ GenerateContentConfig مع ThinkingConfig
-        config = types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(
-                thinking_level="HIGH",
-            )
-        )
-
         response = await client.aio.models.generate_content(
             model=self.flash_model,
             contents=[
@@ -404,8 +392,7 @@ class VisionProcessor:
                         types.Part.from_text(text=coord_prompt)
                     ]
                 )
-            ],
-            config=config
+            ]
         )
 
         raw_text = response.text.strip()
@@ -597,3 +584,48 @@ class VisionProcessor:
 
         logger.info("🐛 تم إنشاء تقرير خطأ عبر Gemini Pro.")
         return {"raw_response": response.text, "source": "pro_bug_report"}
+
+    async def explain_page(self, screenshot: bytes, question: str = "") -> dict:
+        """Generate a user-friendly explanation of the current page.
+
+        Used by the narration engine to help the agent "speak" to the user
+        about what it sees and why it's taking certain actions.
+
+        Args:
+            screenshot: Screenshot bytes (PNG).
+            question: Optional user question about the page.
+
+        Returns:
+            dict: Explanation with raw_response and source.
+        """
+        client = self._get_client()
+        optimized = self._optimize_screenshot(screenshot)
+
+        explain_prompt = (
+            "You are Basir, a helpful web co-pilot. "
+            "Look at this webpage screenshot and explain what you see "
+            "in a clear, conversational tone. "
+            "Focus on: what page this is, what options are available, "
+            "and what the user might want to do next.\n"
+        )
+        if question:
+            explain_prompt += f"\nUser's question: {question}\n"
+        explain_prompt += "\nRespond in 2-3 concise sentences."
+
+        from google.genai import types
+
+        response = await client.aio.models.generate_content(
+            model=self.flash_model,
+            contents=[
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_bytes(data=optimized, mime_type="image/jpeg"),
+                        types.Part.from_text(text=explain_prompt)
+                    ]
+                )
+            ],
+        )
+
+        logger.info("🗣️ Page explanation generated.")
+        return {"raw_response": response.text, "source": "flash_explain"}

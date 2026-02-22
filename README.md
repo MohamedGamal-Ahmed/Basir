@@ -2,10 +2,10 @@
   <img src="assets/banner.png" alt="Basir Banner" width="100%"/>
 </p>
 
-<h1 align="center">🔭 Basir — Autonomous QA Visionary Agent</h1>
+<h1 align="center">🔭 Basir — Co-Pilot for the Web</h1>
 
 <p align="center">
-  <strong>بصير</strong> — AI-powered autonomous QA agent that <em>sees</em>, <em>thinks</em>, and <em>interacts</em> with web UIs like a human tester.
+  <strong>بصير</strong> — An intent-based AI agent that <em>sees</em> the screen, <em>understands</em> your goal, and <em>navigates</em> the web for you.
 </p>
 
 <p align="center">
@@ -20,13 +20,13 @@
 
 ## 🧠 What is Basir?
 
-**Basir** (بصير — Arabic for "The Seer") is an autonomous QA testing agent that eliminates the fragility of traditional CSS/XPath-based test automation. Instead of brittle selectors, Basir uses **multimodal AI vision** to understand web interfaces contextually — just like a human tester would.
+**Basir** (بصير — Arabic for "The Seer") is an autonomous AI agent that acts as your personal web navigator. Instead of relying on brittle DOM selectors or predefined scripts, Basir uses **multimodal AI vision and structural perception (ARIA)** to understand web interfaces contextually — just like a human user.
 
 ### The Problem
-Traditional QA automation breaks every time the UI changes — a renamed class, a moved button, a redesigned form. Teams spend more time *maintaining* tests than *writing* them.
+Traditional automation breaks every time the UI changes. Writing scripts to book a flight, scrape data, or fill out complex forms is tedious and fragile.
 
 ### The Solution
-Basir **sees the screen**, **reasons about what to do**, and **interacts with elements** using AI-powered coordinate detection. No selectors. No brittle locators. Just a goal in natural language.
+Basir **sees the screen**, **reasons about your intent**, and **takes action** (clicking, typing, scrolling). It explains its thought process in real-time and pauses to ask for clarification when needed (Human-in-the-Loop). No selectors. No scripts. Just pure intent.
 
 ---
 
@@ -34,14 +34,13 @@ Basir **sees the screen**, **reasons about what to do**, and **interacts with el
 
 | Feature | Description |
 |---------|-------------|
-| 🧠 **ReAct Pattern** | Autonomous goal-based testing: Observe → Think → Act → Verify |
-| 🔄 **Self-Healing** | Automatic recovery from errors — retries with fresh screenshots |
-| 👁️ **Vision-First** | Uses Gemini multimodal models to understand UI |
-| 🎯 **Coordinate Navigation** | AI-detected click targets — no CSS selectors needed |
-| 📡 **Live Streaming** | Real-time browser feed with CDP Screencast |
-| 🖥️ **Streamlit Dashboard** | Beautiful live control room with reasoning logs |
-| 🧩 **Command Pattern** | Extensible test architecture — add new test types easily |
-| 🔒 **Stealth Mode** | Bypasses bot detection with anti-fingerprinting |
+| 🧠 **Intent-Based Navigation** | Give it a goal ("Book a flight to Paris"), and it drives the browser autonomously. |
+| 👁️ **Dual Perception** | Fuses Vision (Gemini 2.5) with ARIA snapshots for perfect contextual understanding. |
+| 🗣️ **Real-time Narration** | Basir explains its reasoning out loud as it navigates. |
+| ✋ **Human-in-the-Loop** | Built-in Interrupts/Redirects allow you to steer the agent mid-task. |
+| 📦 **Google ADK Integration** | Packaged as a standard Google Agent Development Kit (ADK) component. |
+| 🖥️ **Live Stream Dashboard** | Beautiful control room showing exactly what the agent sees and thinks. |
+| ☁️ **Cloud Run Ready** | Fast deployment as a microservice using FastAPI and Docker. |
 
 ---
 
@@ -53,16 +52,17 @@ Basir/
 ├── app.py                         # 🖥️ Streamlit Live Dashboard
 ├── requirements.txt               # Dependencies
 │
+├── server.py                      # ☁️ FastAPI for Cloud Run
 ├── basir/                         # Core engine
-│   ├── agent.py                   # 🎯 Orchestrator + Self-Healing
-│   ├── browser_controller.py      # 🌐 Playwright + CoordinateMapper
-│   ├── vision_processor.py        # 👁️ Gemini Vision + Live Streaming
-│   ├── reporter.py                # 📊 Test report generation
+│   ├── agent.py                   # 🎯 Orchestrator & Execution Loop
+│   ├── adk_agent.py               # 📦 Google ADK Wrapper
+│   ├── browser_controller.py      # 🌐 Playwright + ARIA tree
+│   ├── vision_processor.py        # 👁️ Gemini Vision integration
+│   ├── reporter.py                # 📊 Execution report generation
 │   │
 │   └── commands/                  # Command Pattern
 │       ├── base_command.py        # Abstract base class
-│       ├── login_test.py          # Scripted login test
-│       └── autonomous_command.py  # 🧠 ReAct autonomous testing
+│       └── autonomous_command.py  # 🧠 IntentCommand (ReAct logic)
 │
 ├── configs/
 │   └── settings.yaml              # Configuration file
@@ -76,15 +76,29 @@ Basir/
 ### How It Works
 
 ```mermaid
-graph LR
-    A["🎯 Goal\n(Natural Language)"] --> B["📸 Screenshot"]
-    B --> C["🧠 AI Vision\n(Gemini 2.5)"]
-    C --> D{"🤔 Think\n(ReAct)"}
-    D -->|"Click"| E["🖱️ Playwright"]
-    D -->|"Type"| E
-    D -->|"Navigate"| E
-    E --> B
-    D -->|"✅ Goal Achieved"| F["📊 Report"]
+graph TD
+    User["🧑‍💻 User Intent\n('Book a flight')"] --> Agent
+    User -.->|Interrupt / Steer| Agent
+    
+    subgraph Basir [Co-Pilot Engine]
+        Agent["🤖 Basir Agent"]
+        
+        subgraph Perception [Dual Perception Loop]
+            Vision["👁️ Screen Capture"]
+            ARIA["🌳 ARIA Snapshot"]
+        end
+        
+        Brain["🧠 Gemini 2.5 (ReAct)"]
+        Browser["🖥️ Playwright (Action)"]
+        
+        Agent --> Perception
+        Perception --> Brain
+        Brain -->|Decide Action| Browser
+        Brain -->|🗣️ Narration| Agent
+        Browser --> Perception
+    end
+    
+    Agent -->|✅ Task Complete| Output["📊 Result"]
 ```
 
 ---
@@ -193,10 +207,11 @@ class MyCustomTest(BaseTestCommand):
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| **MVP** | Login flow testing on live URLs | 🔄 In Progress |
-| **Phase 2** | Annotated screenshots in bug reports | ⏳ Planned |
-| **Phase 3** | Natural language test suite generation | ⏳ Planned |
-| **Phase 4** | CI/CD integration & parallel execution | ⏳ Planned |
+| **MVP** | Intent-based navigation on live URLs | ✅ Complete |
+| **Phase 2** | Live Dashboard with Agent Narration | ✅ Complete |
+| **Phase 3** | Human-in-the-Loop Interrupts | ✅ Complete |
+| **Phase 4** | Containerized Cloud Run Deployment | ✅ Complete |
+| **Phase 5** | Multi-agent collaboration with Google ADK | ⏳ Planned |
 
 ---
 
