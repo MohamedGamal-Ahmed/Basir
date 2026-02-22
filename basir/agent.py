@@ -1,11 +1,11 @@
-"""Agent module - The main orchestrator for the Basir QA Testing Agent.
+"""Agent module - The main orchestrator for the Basir Web Co-Pilot.
 
 This module contains the Agent class which coordinates all components
-(BrowserController, VisionProcessor, Reporter) using Google ADK.
+(BrowserController, VisionProcessor, Reporter) using Google Gemini.
 It implements Self-Healing logic and supports two modes:
 
 1. Scripted Testing: Execute predefined test commands (LoginTestCommand).
-2. Autonomous Testing: Achieve natural language goals via ReAct pattern.
+2. Autonomous Navigation: Achieve natural language goals via ReAct pattern.
 
 Typical usage example:
 
@@ -27,9 +27,6 @@ from typing import Optional
 
 from basir.browser_controller import BrowserController
 from basir.vision_processor import VisionProcessor
-from basir.groq_processor import GroqProcessor
-from basir.deepseek_processor import DeepSeekProcessor
-from basir.ollama_processor import OllamaProcessor
 from basir.reporter import Reporter
 
 logger = logging.getLogger(__name__)
@@ -63,31 +60,13 @@ class Agent:
         self.max_retries = self.config.get("max_retries", self.DEFAULT_MAX_RETRIES)
 
         self.browser = BrowserController(config=self.config.get("browser", {}))
-        
-        provider = self.config.get("api", {}).get("provider", "google_ai")
-        if provider == "groq":
-            self.vision = GroqProcessor(config=self.config)
-            self.is_fast_api = True
-            logger.info("تم اختيار Groq كـ AI Provider.")
-        elif provider == "deepseek":
-            self.vision = DeepSeekProcessor(config=self.config)
-            self.is_fast_api = True
-            logger.info("تم اختيار DeepSeek كـ AI Provider.")
-        elif provider == "ollama":
-            self.vision = OllamaProcessor(config=self.config)
-            self.is_fast_api = True
-            logger.info("تم اختيار Ollama (محلي) كـ AI Provider.")
-        else:
-            self.vision = VisionProcessor(config=self.config.get("vision", {}))
-            self.is_fast_api = False
-            logger.info("تم اختيار Google AI كـ AI Provider.")
-            
+        self.vision = VisionProcessor(config=self.config.get("vision", {}))
         self.reporter = Reporter(config=self.config.get("reporter", {}))
-        
+
         # حالة ذكاء الاصطناعي لإظهار الـ Overlay
         self.is_thinking = False
 
-        logger.info("تم تهيئة الوكيل Basir بنجاح.")
+        logger.info("🔭 Basir Web Co-Pilot initialized (Gemini).")
 
     async def run(self, target_url: str, test_command) -> dict:
         """تشغيل حلقة الاختبار الرئيسية على URL محدد.
@@ -226,8 +205,7 @@ class Agent:
 
                 # انتظار استقرار الشاشة للصورة القادمة
                 import asyncio
-                delay = 0.5 if getattr(self, "is_fast_api", False) else 2.0
-                await asyncio.sleep(delay)
+                await asyncio.sleep(1.0)
 
                 results["steps"].append(action_result)
                 step_num += 1
@@ -340,8 +318,7 @@ class Agent:
 
                     # انتظار استقرار الشاشة
                     import asyncio
-                    delay = 0.5 if getattr(self, "is_fast_api", False) else 2.0
-                    await asyncio.sleep(delay)
+                    await asyncio.sleep(1.0)
 
                     # بث النتيجة
                     _emit("step_result", action_result)

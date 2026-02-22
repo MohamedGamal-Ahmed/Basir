@@ -36,12 +36,12 @@ Basir **sees the screen**, **reasons about what to do**, and **interacts with el
 |---------|-------------|
 | 🧠 **ReAct Pattern** | Autonomous goal-based testing: Observe → Think → Act → Verify |
 | 🔄 **Self-Healing** | Automatic recovery from errors — retries with fresh screenshots |
-| 👁️ **Vision-First** | Uses Gemini/Groq/DeepSeek/Ollama multimodal models to understand UI |
+| 👁️ **Vision-First** | Uses Gemini multimodal models to understand UI |
 | 🎯 **Coordinate Navigation** | AI-detected click targets — no CSS selectors needed |
 | 📡 **Live Streaming** | Real-time browser feed with CDP Screencast |
 | 🖥️ **Streamlit Dashboard** | Beautiful live control room with reasoning logs |
 | 🧩 **Command Pattern** | Extensible test architecture — add new test types easily |
-| 🏠 **Multi-Provider** | Google AI, Groq, DeepSeek, or fully local with Ollama |
+| 🔒 **Stealth Mode** | Bypasses bot detection with anti-fingerprinting |
 
 ---
 
@@ -57,9 +57,6 @@ Basir/
 │   ├── agent.py                   # 🎯 Orchestrator + Self-Healing
 │   ├── browser_controller.py      # 🌐 Playwright + CoordinateMapper
 │   ├── vision_processor.py        # 👁️ Gemini Vision + Live Streaming
-│   ├── groq_processor.py          # ⚡ Groq LLM integration
-│   ├── deepseek_processor.py      # 🔮 DeepSeek integration
-│   ├── ollama_processor.py        # 🏠 Local Ollama integration
 │   ├── reporter.py                # 📊 Test report generation
 │   │
 │   └── commands/                  # Command Pattern
@@ -81,7 +78,7 @@ Basir/
 ```mermaid
 graph LR
     A["🎯 Goal\n(Natural Language)"] --> B["📸 Screenshot"]
-    B --> C["🧠 AI Vision\n(Gemini/Groq)"]
+    B --> C["🧠 AI Vision\n(Gemini 2.5)"]
     C --> D{"🤔 Think\n(ReAct)"}
     D -->|"Click"| E["🖱️ Playwright"]
     D -->|"Type"| E
@@ -97,11 +94,7 @@ graph LR
 ### Prerequisites
 
 - **Python 3.10+**
-- **API Key** for at least one provider:
-  - [Google AI Studio](https://aistudio.google.com/) (Free tier)
-  - [Groq](https://console.groq.com/) (Free tier)
-  - [DeepSeek](https://platform.deepseek.com/)
-  - Or **Ollama** for fully local (no API key needed)
+- **API Key** from [Google AI Studio](https://aistudio.google.com/) (Free tier)
 
 ### Installation
 
@@ -135,20 +128,7 @@ cp .env.example .env
 Create a `.env` file in the project root:
 
 ```env
-# Choose one or more providers:
 GOOGLE_API_KEY=your_google_ai_key
-GROQ_API_KEY=your_groq_key
-DEEPSEEK_API_KEY=your_deepseek_key
-
-# For Ollama (local), no key needed — just run:
-# ollama serve && ollama pull llama3.2-vision
-```
-
-Set your preferred provider in `configs/settings.yaml`:
-
-```yaml
-api:
-  provider: "google_ai"  # Options: google_ai, groq, deepseek, ollama
 ```
 
 ---
@@ -182,14 +162,11 @@ This launches a real-time dashboard featuring:
 
 ---
 
-## ⚙️ Supported AI Providers
+## ⚙️ AI Provider
 
 | Provider | Models | Type | Cost |
 |----------|--------|------|------|
-| **Google AI Studio** | `gemini-1.5-flash`, `gemini-1.5-pro` | Cloud | Free tier |
-| **Groq** | `llama-4-scout`, `llama-3.2-vision` | Cloud | Free tier |
-| **DeepSeek** | `deepseek-chat` | Cloud | Paid |
-| **Ollama** | `llama3.2-vision` | 🏠 Local | Free |
+| **Google AI Studio** | `gemini-2.5-flash`, `gemini-2.5-pro` | Cloud | Free tier |
 
 ---
 

@@ -1,7 +1,7 @@
-"""Basir QA Agent - Main Entry Point.
+"""Basir Web Co-Pilot - Main Entry Point.
 
-This is the main entry point for running the Basir Autonomous QA
-Testing Agent. It loads configuration, initializes the Agent,
+This is the main entry point for running the Basir Web Co-Pilot.
+It loads configuration, initializes the Agent,
 and executes the specified test command.
 
 Usage:
@@ -66,7 +66,7 @@ def parse_args() -> argparse.Namespace:
         argparse.Namespace: الوسائط المحلّلة.
     """
     parser = argparse.ArgumentParser(
-        description="Basir - Autonomous QA Testing Agent 🔭",
+        description="Basir - Web Co-Pilot 🔭",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -120,7 +120,7 @@ async def main() -> None:
     args = parse_args()
 
     print("=" * 55)
-    print("  🔭 Basir - Autonomous QA Visionary Agent")
+    print("  🔭 Basir - Web Co-Pilot")
     print("=" * 55)
 
     # تحميل الإعدادات
@@ -136,24 +136,11 @@ async def main() -> None:
         },
         "reporter": config.get("reporter", {}),
         "api": config.get("api", {}),
-        "groq_models": config.get("groq_models", {}),
-        "deepseek_models": config.get("deepseek_models", {}),
-        "ollama_models": config.get("ollama_models", {}),
     }
 
     agent = Agent(config=agent_config)
 
-    # Pre-flight check: test Ollama connectivity
-    provider = config.get("api", {}).get("provider", "google_ai")
-    if provider == "ollama":
-        print("\n🔌 Testing Ollama connectivity...")
-        is_reachable = await agent.vision.check_connectivity()
-        if not is_reachable:
-            print("❌ FATAL: Cannot reach Ollama. Aborting.")
-            print("   → Run 'ollama serve' in a separate terminal first.")
-            print("   → Then run 'ollama pull llama3.2-vision' to download the model.")
-            sys.exit(1)
-        print("✅ Ollama pre-flight check passed!\n")
+
 
     # اختيار وضع الاختبار
     if args.mode == "autonomous":

@@ -353,9 +353,8 @@ class AutonomousCommand(BaseTestCommand):
             full_prompt += f"\n\n--- Page Structure (ARIA, viewport only) ---\n{trimmed}"
             print(f"   📎 ARIA context added ({len(trimmed)} chars, viewport only)")
 
-        # استخدام agent.vision بدلاً من Gemini SDK مباشرة
-        # حتى يعمل مع أي provider (Ollama, DeepSeek, Gemini, etc.)
-        print(f"\n🧠 [Think] Sending to AI for decision...")
+        # استخدام agent.vision (Gemini) للتحليل
+        print(f"\n🧠 [Think] Sending to Gemini for decision...")
         analysis = await agent.vision.analyze_screenshot(
             screenshot=screenshot,
             context=full_prompt

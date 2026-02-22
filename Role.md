@@ -8,19 +8,9 @@
 
 ### المهمة (Mission)
 القضاء على هشاشة أتمتة الاختبارات التقليدية باستخدام نماذج AI متعددة الوسائط
-(Gemini / Groq / DeepSeek / Ollama) لفهم واجهات المستخدم وتنفيذ اختبارات
-ذاتية التعافي (Self-Healing) بلغة طبيعية.
-
----
-
-## 2. التقنيات المستخدمة (Tech Stack)
-
 | المكون | التقنية | الدور |
 |--------|---------|-------|
-| 🧠 الرؤية (Vision) | Gemini 1.5 Flash/Pro | تحليل لقطات الشاشة + كشف العناصر بالإحداثيات |
-| ⚡ بديل سريع | Groq (Llama 4 Scout) | استدلال سريع مجاني |
-| 🔮 بديل متقدم | DeepSeek Chat | استدلال عميق |
-| 🏠 محلي بالكامل | Ollama (Llama 3.2 Vision) | تشغيل بدون إنترنت أو API Keys |
+| 🧠 الرؤية (Vision) | Gemini 2.5 Flash/Pro | تحليل لقطات الشاشة + كشف العناصر بالإحداثيات |
 | 🌐 التفاعل | Playwright (Python) | التحكم في المتصفح + Stealth Mode + CDP Screencast |
 | 🖥️ الواجهة | Streamlit | لوحة تحكم حية مع بث مباشر |
 | 📊 التقارير | JSON Reporter | إنشاء وحفظ تقارير الاختبار |
@@ -42,9 +32,6 @@ Basir/
 │   ├── agent.py                   # 🎯 المنسق + Self-Healing + ReAct
 │   ├── browser_controller.py      # 🌐 Playwright + CoordinateMapper + Virtual Cursor
 │   ├── vision_processor.py        # 👁️ Gemini Vision + Live Streaming + ARIA Snapshot
-│   ├── groq_processor.py          # ⚡ Groq LLM (Llama 4 Scout / Llama 3.2 Vision)
-│   ├── deepseek_processor.py      # 🔮 DeepSeek Chat
-│   ├── ollama_processor.py        # 🏠 Ollama Local
 │   ├── reporter.py                # 📊 JSON Test Reports
 │   │
 │   └── commands/                  # Command Pattern
@@ -167,9 +154,9 @@ python main.py --mode autonomous --url https://example.com --goal "Navigate to l
 streamlit run app.py
 ```
 
-### تبديل مزود الـ AI:
+### مزود الـ AI:
 ```yaml
 # configs/settings.yaml
 api:
-  provider: "google_ai"   # أو "groq" أو "deepseek" أو "ollama"
+  provider: "google_ai"
 ```
