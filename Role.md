@@ -2,14 +2,14 @@
 
 ## 1. هوية المشروع (Project Identity)
 
-> **Basir** (بصير) — وكيل ذكاء اصطناعي عالي الدقة لضمان الجودة.
-> مبني لتحدي **Gemini Live Agent Challenge** (فئة UI Navigator).
+> **Basir** (بصير) — وكيل ذكاء اصطناعي مستقل لضمان الجودة.
 > يمثل "عيون المطوّر"، قادر على **الرؤية، التفكير، والتفاعل** مع واجهات الويب كمختبر بشري.
+> يستبدل هشاشة CSS/XPath بـ **رؤية AI متعددة الوسائط** لفهم واجهات المستخدم سياقياً.
 
 ### المهمة (Mission)
-القضاء على هشاشة أتمتة الاختبارات التقليدية المعتمدة على CSS/XPath
-باستخدام **Gemini 3.1 Multimodal Vision** لفهم واجهات المستخدم سياقياً
-وتنفيذ حالات اختبار ذاتية التعافي (Self-Healing).
+القضاء على هشاشة أتمتة الاختبارات التقليدية باستخدام نماذج AI متعددة الوسائط
+(Gemini / Groq / DeepSeek / Ollama) لفهم واجهات المستخدم وتنفيذ اختبارات
+ذاتية التعافي (Self-Healing) بلغة طبيعية.
 
 ---
 
@@ -17,77 +17,123 @@
 
 | المكون | التقنية | الدور |
 |--------|---------|-------|
-| 🧠 الذكاء | Gemini 3.1 Flash | تنفيذ سريع + رؤية فورية (Live Streaming) |
-| 🧠 التحليل | Gemini 3.1 Pro | استنتاج عالي المستوى + تقارير الأخطاء |
-| 🎭 الأوركستريشن | Google ADK | تنسيق عمل الوكيل وإدارة الأدوات |
-| 🌐 التفاعل | Playwright (Python) | التحكم في المتصفح + التقاط الشاشة |
-| ☁️ السحابة | Vertex AI & Cloud Run | استضافة ونشر الوكيل |
+| 🧠 الرؤية (Vision) | Gemini 1.5 Flash/Pro | تحليل لقطات الشاشة + كشف العناصر بالإحداثيات |
+| ⚡ بديل سريع | Groq (Llama 4 Scout) | استدلال سريع مجاني |
+| 🔮 بديل متقدم | DeepSeek Chat | استدلال عميق |
+| 🏠 محلي بالكامل | Ollama (Llama 3.2 Vision) | تشغيل بدون إنترنت أو API Keys |
+| 🌐 التفاعل | Playwright (Python) | التحكم في المتصفح + Stealth Mode + CDP Screencast |
+| 🖥️ الواجهة | Streamlit | لوحة تحكم حية مع بث مباشر |
+| 📊 التقارير | JSON Reporter | إنشاء وحفظ تقارير الاختبار |
 
 ---
 
-## 3. الهيكلية المعمارية (Current Architecture)
+## 3. الهيكلية المعمارية (Architecture)
 
 ```
 Basir/
-├── ROLE.md                    # هذا الملف - المرجع الأساسي
-├── main.py                    # نقطة الدخول (CLI)
-├── app.py                     # 🖥️ Streamlit Dashboard (واجهة مباشرة)
-├── requirements.txt           # الحزم المطلوبة
+├── README.md                      # التوثيق الرئيسي (GitHub)
+├── Role.md                        # هذا الملف — المرجع الداخلي للمشروع
+├── main.py                        # نقطة الدخول (CLI)
+├── app.py                         # 🖥️ Streamlit Dashboard (واجهة حية)
+├── requirements.txt               # الحزم المطلوبة
 │
-├── basir/                     # الكود الأساسي
+├── basir/                         # الكود الأساسي (Core Engine)
 │   ├── __init__.py
-│   ├── agent.py               # المنسق + Self-Healing
-│   ├── browser_controller.py  # Playwright + CoordinateMapper
-│   ├── vision_processor.py    # Gemini Vision + Live Streaming
-│   ├── reporter.py            # إنشاء التقارير
+│   ├── agent.py                   # 🎯 المنسق + Self-Healing + ReAct
+│   ├── browser_controller.py      # 🌐 Playwright + CoordinateMapper + Virtual Cursor
+│   ├── vision_processor.py        # 👁️ Gemini Vision + Live Streaming + ARIA Snapshot
+│   ├── groq_processor.py          # ⚡ Groq LLM (Llama 4 Scout / Llama 3.2 Vision)
+│   ├── deepseek_processor.py      # 🔮 DeepSeek Chat
+│   ├── ollama_processor.py        # 🏠 Ollama Local
+│   ├── reporter.py                # 📊 JSON Test Reports
 │   │
-│   └── commands/              # Command Pattern للاختبارات
+│   └── commands/                  # Command Pattern
 │       ├── __init__.py
-│       ├── base_command.py    # الكلاس الأساسي (Abstract)
-│       ├── login_test.py      # اختبار Login (سيناريو ثابت)
-│       └── autonomous_command.py  # 🧠 ReAct الذاتي (Goal-based)
+│       ├── base_command.py        # Abstract Base Class
+│       ├── login_test.py          # سيناريو Login ثابت
+│       └── autonomous_command.py  # 🧠 ReAct — اختبار ذاتي بهدف طبيعي
 │
-├── configs/                   # الإعدادات
-│   └── settings.yaml
+├── configs/
+│   └── settings.yaml              # إعدادات المشروع (Provider + Models + Browser)
 │
-├── deploy/                    # ملفات النشر
-│   └── Dockerfile
+├── assets/
+│   └── banner.png                 # صورة البانر للـ README
 │
-└── tests/                     # اختبارات الوحدة
+├── deploy/
+│   └── Dockerfile                 # نشر الحاوية
+│
+└── tests/                         # اختبارات الوحدة
     └── __init__.py
 ```
 
 ### مبادئ معمارية:
 - **OOP-First**: كل مكون هو كلاس مستقل وقابل للتوسعة.
-- **Command Pattern**: إضافة أنواع اختبارات جديدة بسهولة.
+- **Command Pattern**: إضافة أنواع اختبارات جديدة بإنشاء كلاس يرث `BaseTestCommand`.
 - **ReAct Pattern**: تخطيط ذاتي مبني على (Observe → Think → Act → Verify).
 - **Short-term Memory**: تاريخ إجراءات + كشف الحلقات التكرارية.
-- **Low Latency**: بث بصري محسّن للتغذية الراجعة "الحية".
-- **Self-Healing**: تعافي تلقائي من الأخطاء أثناء التنفيذ.
+- **Self-Healing**: تعافي تلقائي من الأخطاء أثناء التنفيذ (حتى `max_retries`).
+- **Multi-Provider**: دعم 4 مزودي AI — تبديل بسطر واحد في `settings.yaml`.
+- **CoordinateMapper**: تحويل إحداثيات Gemini (0-1000) → بكسلات حقيقية.
+- **CDP Screencast**: بث مباشر عبر Chrome DevTools Protocol مع مؤشر وهمي.
 - **Self-Documenting**: توثيق Google-style docstrings لكل موديول.
 
 ---
 
-## 4. خارطة الطريق (Roadmap)
+## 4. المكونات الأساسية (Core Components)
 
-| المرحلة | الوصف | الحالة |
-|---------|-------|--------|
-| **MVP** | اختبار تدفق تسجيل الدخول (Login Flow) على URL حي | 🔄 قيد العمل |
-| **Phase 2** | تقارير أخطاء مع لقطات شاشة موضحة (Annotated Screenshots) | ⏳ |
-| **Phase 3** | توليد مجموعات اختبار بلغة طبيعية (Natural Language Test Suites) | ⏳ |
+### 🎯 Agent (`basir/agent.py`)
+المنسق الرئيسي — يربط بين جميع المكونات:
+- `run()` — تشغيل اختبار بسيناريو ثابت (LoginTest).
+- `plan_and_execute()` — تشغيل وضع ReAct الذاتي بهدف طبيعي.
+- `run_with_callback()` — بث تحديثات حية للـ Dashboard.
+- `_execute_with_healing()` — تنفيذ مع self-healing.
+- `_attempt_recovery()` — محاولة تعافي من خطأ.
+
+### 🌐 BrowserController (`basir/browser_controller.py`)
+- `launch()` — تشغيل Chromium في Stealth Mode.
+- `navigate()` — تصفح مع استراتيجية قوية ضد Timeout.
+- `take_screenshot()` — التقاط لقطة شاشة PNG.
+- `click_at_normalized()` — نقر بإحداثيات Gemini.
+- `type_text()` — كتابة نص بمحاكاة بشرية.
+- `start_streaming()` / `stop_streaming()` — بث CDP مباشر.
+- `get_aria_snapshot()` — استخراج شجرة Accessibility.
+- `_inject_virtual_cursor()` — مؤشر ماوس بتصميم Electric Purple.
+
+### 👁️ VisionProcessor (`basir/vision_processor.py`)
+- `analyze_screenshot()` — تحليل صورة واحدة (Flash).
+- `get_element_coordinates()` — إحداثيات عنصر محدد.
+- `_optimize_screenshot()` — ضغط وتقليل حجم الصور.
+- `LiveSession` — جلسة بث مباشر مع Gemini.
+
+### 📊 Reporter (`basir/reporter.py`)
+- `generate()` — إنشاء تقرير من نتائج الاختبار.
+- `save()` — حفظ التقرير بصيغة JSON.
+- `format_summary()` — ملخص نصي للطباعة.
 
 ---
 
-## 5. سجل التقدم (Progress Log)
+## 5. خارطة الطريق (Roadmap)
+
+| المرحلة | الوصف | الحالة |
+|---------|-------|--------|
+| **MVP** | اختبار تدفق Login على URL حي | 🔄 قيد العمل |
+| **Phase 2** | تقارير أخطاء مع Annotated Screenshots | ⏳ مخطط |
+| **Phase 3** | توليد مجموعات اختبار بلغة طبيعية | ⏳ مخطط |
+| **Phase 4** | تكامل CI/CD وتنفيذ متوازي | ⏳ مخطط |
+
+---
+
+## 6. سجل التقدم (Progress Log)
 
 | التاريخ | ما تم إنجازه |
 |---------|-------------|
-| 2026-02-21 | ✅ إنشاء الهيكل الكامل للمشروع (Boilerplate). جميع الكلاسات جاهزة مع Self-Healing + CoordinateMapper + Live Streaming + Command Pattern. |
-| 2026-02-21 | 🔐 **تأمين + مصادقة**: `.gitignore` + Service Account auth في `vision_processor.py`. |
-| 2026-02-21 | 🎯 **Precision Navigation**: `get_element_coordinates()` + `login_test.py` مع إحداثيات Gemini الحقيقية. |
-| 2026-02-21 | 🧠 **ReAct Pattern**: `autonomous_command.py` + `plan_and_execute(goal)` + ActionMemory + obstacle handling. |
-| 2026-02-21 | 🖥️ **Basir Dashboard**: إنشاء `app.py` (Streamlit) مع Live View + Control Room + Reasoning Log + CSS متقدم. إضافة `run_with_callback()` في `agent.py` لبث التحديثات الحية. |
-| 2026-02-21 | 🔄 **AI Studio Migration**: تحويل من Vertex AI (billing) إلى Google AI Studio (free). API Key من `.env`. إصلاح viewport_size → viewport. إضافة حفظ screenshots تلقائي. Models: `gemini-1.5-flash` + `gemini-1.5-pro`. |
+| 2026-02-22 | 🚀 **رفع المشروع على GitHub** + إنشاء README.md احترافي + تحديث Role.md. |
+| 2026-02-21 | 🖥️ **Basir Dashboard**: إنشاء `app.py` (Streamlit) مع Live View + Control Room + Reasoning Log. |
+| 2026-02-21 | 🧠 **ReAct Pattern**: `autonomous_command.py` + ActionMemory + كشف الحلقات. |
+| 2026-02-21 | 🎯 **Precision Navigation**: `CoordinateMapper` + `get_element_coordinates()`. |
+| 2026-02-21 | 🔄 **AI Studio Migration**: تحويل من Vertex AI إلى Google AI Studio (Free). |
+| 2026-02-21 | 🔐 **تأمين**: `.gitignore` + Service Account auth. |
+| 2026-02-21 | ✅ **إنشاء الهيكل الكامل**: جميع الكلاسات + Self-Healing + Command Pattern. |
 
 ### الخطوة التالية المتوقعة:
 - إطلاق أول جلسة ReAct ناجحة عبر الداشبورد.
@@ -95,13 +141,35 @@ Basir/
 
 ---
 
-## 6. تعليمات استئناف العمل (AI Resume Instructions)
+## 7. تعليمات استئناف العمل (AI Resume Instructions)
 
 > **عند بداية كل جلسة جديدة، الذكاء الاصطناعي يجب عليه:**
 
-1. **اقرأ هذا الملف أولاً** (`ROLE.md`) لاستعادة السياق الكامل.
+1. **اقرأ هذا الملف أولاً** (`Role.md`) لاستعادة السياق الكامل.
 2. **راجع حالة الـ Roadmap** وحدد المرحلة الحالية.
 3. **افحص الكود الموجود** في مجلد `basir/` لمعرفة آخر التعديلات.
 4. **اسأل المستخدم**: "إيه اللي عايز نشتغل عليه النهاردة؟"
 5. **التزم بالمبادئ المعمارية** المذكورة أعلاه في أي كود جديد.
 6. **حدّث هذا الملف** إذا تغيرت الهيكلية أو تقدمت في خارطة الطريق.
+
+---
+
+## 8. التشغيل السريع (Quick Reference)
+
+```bash
+# CLI — سيناريو ثابت
+python main.py --url https://the-internet.herokuapp.com/login
+
+# CLI — وضع ReAct الذاتي
+python main.py --mode autonomous --url https://example.com --goal "Navigate to login and test it"
+
+# Dashboard حية
+streamlit run app.py
+```
+
+### تبديل مزود الـ AI:
+```yaml
+# configs/settings.yaml
+api:
+  provider: "google_ai"   # أو "groq" أو "deepseek" أو "ollama"
+```
