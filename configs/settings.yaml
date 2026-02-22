@@ -1,0 +1,46 @@
+# Basir QA Agent - Configuration
+# ================================
+
+# Google AI Studio (Free Tier)
+# API Key is loaded from .env file (GOOGLE_API_KEY)
+# AI Provider
+# provider can be "google_ai", "vertex_ai", "groq", "deepseek", or "ollama"
+api:
+  provider: "groq"
+
+# Gemini Models (AI Studio - Fast & Reliable)
+models:
+  flash: "gemini-1.5-flash"
+  pro: "gemini-1.5-flash"
+
+# Groq Models
+groq_models:
+  flash: "meta-llama/llama-4-scout-17b-16e-instruct"
+  pro: "llama-3.2-11b-vision-preview"
+
+# DeepSeek Models
+deepseek_models:
+  flash: "deepseek-chat"
+  pro: "deepseek-chat"
+
+# Ollama Models (100% Local)
+ollama_models:
+  flash: "llama3.2-vision"
+  pro: "llama3.2-vision"
+
+# Browser Settings
+browser:
+  headless: true
+  viewport:
+    width: 1920
+    height: 1080
+
+# Agent Settings
+agent:
+  max_retries: 3        # الحد الأقصى لمحاولات التعافي الذاتي
+  step_timeout: 10000   # مهلة كل خطوة بالميلي ثانية
+
+# Reporter Settings
+reporter:
+  output_dir: "reports"
+  format: "json"

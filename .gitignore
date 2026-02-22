@@ -1,0 +1,44 @@
+# ==============================
+# Basir QA Agent - .gitignore
+# ==============================
+
+# ⚠️ CRITICAL: Service Account Keys & Secrets
+configs/*.json
+configs/service-account.json
+*.env
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual# Environment & API Keys
+.env
+*.env/
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports (generated output)
+reports/
+
+# Playwright
+test-results/
+playwright-report/
